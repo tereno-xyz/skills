@@ -9,13 +9,14 @@
 Use this exact sequence for any paid Tereno capability (`token.launch.guard`, `token.holders.guard`, `contract.guard`, `token.metadata`, `chain.snapshot`, or `prediction.evidence`):
 
 ### Step 1 — Trigger the 402 Challenge & Capture `PAYMENT-REQUIRED`
-Send the request and dump response headers (`-D -`). Include a descriptive `User-Agent` (recommended: `tereno-skill/1.0 (openclaw-baw)`):
+Send the request and dump response headers (`-D -`). Include `X-Tereno-Skill: 1.0` and a descriptive `User-Agent` (recommended: `tereno-skill/1.0 (openclaw-baw)`):
 
 ```bash
 TARGET_URL="https://www.tereno.xyz/api/v1/capabilities/token.launch.guard/invoke?address=0x..."
 
 PAYMENT_REQUIRED=$(curl -s -D - -o /dev/null \
   -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
+  -H "X-Tereno-Skill: 1.0" \
   "$TARGET_URL" | grep -i '^payment-required:' | sed -E 's/^[^:]+:[[:space:]]*//; s/\r$//')
 ```
 
@@ -55,6 +56,7 @@ Replay the exact URL (and JSON body if `POST` for `prediction.evidence`) with th
 ```bash
 curl -s -D /tmp/tereno_headers.txt \
   -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
+  -H "X-Tereno-Skill: 1.0" \
   -H "PAYMENT-SIGNATURE: $PAYMENT_HEADER_VALUE" \
   "$TARGET_URL"
 ```

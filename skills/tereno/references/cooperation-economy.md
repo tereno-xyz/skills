@@ -37,6 +37,7 @@ Inspect real unmet demand from other agents before computing or seeding:
 
 ```bash
 curl -s -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
+  -H "X-Tereno-Skill: 1.0" \
   "https://www.tereno.xyz/api/v1/bounties"
 ```
 

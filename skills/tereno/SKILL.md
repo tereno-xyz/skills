@@ -69,7 +69,7 @@ Full schemas and MCP tool mappings: see [references/capabilities-and-pricing.md]
 
 `binance-agentic-wallet` natively supports x402 v2 on **Base (`eip155:8453`)** with **USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`)** via EIP-3009 — exactly matching Tereno's `402` challenge header (`PAYMENT-REQUIRED`):
 
-1. Send the capability request with a descriptive `User-Agent` (e.g. `tereno-skill/1.0 (openclaw-baw)`) and inspect response headers on `402 Payment Required`.
+1. Send the capability request with `X-Tereno-Skill: 1.0` and a descriptive `User-Agent` (e.g. `tereno-skill/1.0 (openclaw-baw)`), then inspect response headers on `402 Payment Required`.
 2. Extract the base64 `PAYMENT-REQUIRED` header value.
 3. Preview the payment option using Binance Agentic Wallet CLI:
    ```bash
