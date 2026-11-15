@@ -51,10 +51,10 @@ Extract:
 > Note: If `data.approveTxHash` is non-null (Permit2 flow), wait for confirmation via `baw wallet tx-history --tx <hash>` before replaying. Base USDC normally uses `eip3009` directly (`approveTxHash: null`).
 
 ### Step 4 — Replay the Original Request with `PAYMENT-SIGNATURE`
-Replay the exact URL (and JSON body if `POST` for `prediction.evidence`) with the signed header:
+Replay the exact URL (and JSON body if `POST` for `prediction.evidence`) with the signed header and a `15s` timeout (`--max-time 15`):
 
 ```bash
-curl -s -D /tmp/tereno_headers.txt \
+curl -s --max-time 15 -D /tmp/tereno_headers.txt \
   -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
   -H "X-Tereno-Skill: 1.0" \
   -H "PAYMENT-SIGNATURE: $PAYMENT_HEADER_VALUE" \
@@ -63,6 +63,8 @@ curl -s -D /tmp/tereno_headers.txt \
 
 - Inspect `/tmp/tereno_headers.txt` for `PAYMENT-RESPONSE` (base64 settlement metadata containing Base `txHash`).
 - Inspect the JSON response `verdict` (`allow` | `review` | `block`), `validUntilBlock`, and `artifactId`.
+
+> Latency note: Cache hits return in `< 200ms` (`executionMs: 0`). Cold misses for `token.launch.guard` and `token.holders.guard` take `~1.2–2.5s` of live Base RPC simulation plus x402 settlement (`~3–5s` end-to-end), so always keep HTTP client timeouts at `10–15s` (`--max-time 15`) to avoid premature aborts before `PAYMENT-RESPONSE` arrives.
 
 ---
 

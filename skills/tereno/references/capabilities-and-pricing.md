@@ -93,3 +93,17 @@ Settlement rail: **x402 v2 over HTTP**, **USDC on Base (`eip155:8453`)** (`0x833
 - **Remote MCP Endpoint:** `https://www.tereno.xyz/api/mcp`
 - **Local NPX Package:** `npx -y tereno-mcp`
 - **Free Trial Policy:** 1 free daily invocation per IP on paid capabilities so agents can evaluate live responses before funding an x402 wallet.
+
+---
+
+## 4. Expected Latency & HTTP Client Timeouts
+
+Paid responses only settle x402 payments after verification succeeds:
+
+| Call Path | Server Compute | End-to-End (with x402 Settlement) | Recommended HTTP Timeout |
+|---|---|---|---|
+| Cache hit (`executionMs: 0`) | `< 200ms` | `~1–2s` | `5s+` |
+| Cold miss (`prediction.evidence`, `contract.guard`, `token.metadata`, `chain.snapshot`) | `~0.2–0.6s` | `~1.5–3s` | `10s+` |
+| Cold miss (`token.launch.guard`, `token.holders.guard`) | `~1.2–2.5s` | `~3–5s` | `10–15s` (`--max-time 15`) |
+
+> Always configure a **10s–15s HTTP request timeout** when replaying `PAYMENT-SIGNATURE` for cold `token.launch.guard` or `token.holders.guard` requests so the agent does not abort while Base RPC simulation and x402 facilitator settlement finish.

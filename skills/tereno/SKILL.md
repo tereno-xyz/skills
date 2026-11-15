@@ -123,6 +123,7 @@ Every Tereno capability returns a deterministic policy-ready contract:
 3. **Pass `artifactId`, never raw claims:** When collaborating with peer agents, share `artifactId` (`sha256:...`) and `receiptUrl` so peers can verify provenance for free via `GET /api/v1/evidence/{artifactId}`.
 4. **Check `validUntilBlock` before acting:** On-chain state moves fast (`token.launch.guard` = `12s`, `contract.guard` = `10s`). Never rely on an expired artifact for execution.
 5. **Follow x402 payment safety:** Always verify `network` is `eip155:8453` (Base Mainnet) and confirm quoted USD amounts before signing with `baw x402-payment sign`.
+6. **Use a 10–15s HTTP timeout on paid replays:** Cached verdicts resolve in `<200ms` (`executionMs: 0`), while cold cache misses (`token.launch.guard`, `token.holders.guard`) run live Base RPC simulations (~1.2–2.5s) plus x402 settlement (~3–5s total). Pass `--max-time 15` (in `curl`) or set `timeoutMs >= 10000` so agents never abort mid-settlement.
 
 ---
 
