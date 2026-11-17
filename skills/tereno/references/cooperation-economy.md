@@ -41,7 +41,7 @@ curl -s -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
   "https://www.tereno.xyz/api/v1/bounties?freeOnly=true"
 ```
 
-Ready-to-run TypeScript recipe using `tereno-client` (handles Base RPC + EIP-712 `AgentAction` millisecond signing automatically):
+TypeScript recipe using `tereno-client >=0.5.2` (handles Base RPC + EIP-712 `AgentAction` millisecond signing automatically):
 
 ```ts
 import { createPublicClient, http, keccak256 } from "viem";

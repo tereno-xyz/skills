@@ -54,16 +54,17 @@ npx skills add tereno-xyz/skills
 openclaw skills install tereno
 ```
 
-Restart or reload skills in your agent runtime. Once loaded, your agent automatically gets the full `SKILL.md` playbook plus step-by-step reference guides for `baw`, capability schemas, cooperative bounties, and `ERC-8183` / `ERC-7579` guards.
+After updating this repository, reinstall the skill from GitHub with the command above, then restart or reload skills in your agent runtime. Resolve any pending payments before restarting an agent that holds recovery state in memory. Once loaded, your agent automatically gets the full `SKILL.md` playbook plus step-by-step reference guides for `baw`, capability schemas, cooperative bounties, and `ERC-8183` / `ERC-7579` guards.
 
 ---
 
 ## 🧭 Compatible Payment Paths
 
-This skill routes agents through three frictionless onboarding paths:
+This skill routes agents through three onboarding paths:
 
 1. **Native Binance Agentic Wallet (`baw`) x402 Flow (Recommended)**
    - Trigger the `402 Payment Required` challenge, inspect Base USDC terms with `baw x402-payment preview`, sign EIP-3009 with `baw x402-payment sign`, and replay with `PAYMENT-SIGNATURE` (using `--max-time 15`).
+   - Preserve the 90s price offer; after a timeout, resend the same signed request instead of signing again.
    - Full shell recipes: [references/baw-x402-workflow.md](./skills/tereno/references/baw-x402-workflow.md).
 2. **Free Daily MCP Evaluation Bridge (Cold-Start Trial)**
    - Point any MCP client at `https://www.tereno.xyz/api/mcp` (or `npx -y tereno-mcp`). Every IP receives **1 free daily verification check** across paid capabilities before funding an x402 wallet.
@@ -83,7 +84,7 @@ This skill routes agents through three frictionless onboarding paths:
 | ⛽ `chain.snapshot` | `GET /api/v1/capabilities/chain.snapshot/invoke` | `$0.01` – `$0.02` | `4s` | Latest Base block number, timestamp, base fee & suggested gas fees |
 | 📊 `prediction.evidence` | `POST /api/v1/capabilities/prediction.evidence/invoke` | `$0.01` – `$0.05` | `30m` | Sourced proposition evidence, UMA dispute risk & emergency 50-50 clause audit |
 
-> **⏱️ Latency & HTTP Timeout Guidance:** Cache hits execute in `< 200ms` (`executionMs: 0`). Cold cache misses run live Base RPC checks (`~0.2–0.6s` standard; `~1.2–2.5s` for `token.launch.guard` and `token.holders.guard`) plus x402 Base settlement (`~3–5s` end-to-end). Always set a **10s–15s HTTP client timeout** (`curl --max-time 15` / `timeoutMs: 15000`) so paid calls never abort mid-settlement.
+> **⏱️ Latency & HTTP Timeout Guidance:** Cache hits execute in `< 200ms` (`executionMs: 0`). Cold cache misses run live Base RPC checks (`~0.2–0.6s` standard; `~1.2–2.5s` for `token.launch.guard` and `token.holders.guard`) plus x402 Base settlement (`~3–5s` end-to-end). Use a **15s HTTP timeout including the response body** (`curl --max-time 15` / `timeoutMs: 15000`). A timeout can still hide a settled payment: recover the original signed request rather than signing again.
 
 Full schemas, MCP tool mappings, and split-cache tiers: [references/capabilities-and-pricing.md](./skills/tereno/references/capabilities-and-pricing.md).
 
@@ -118,6 +119,7 @@ Full schemas, MCP tool mappings, and split-cache tiers: [references/capabilities
     └── tereno/
         ├── SKILL.md
         └── references/
+            ├── x402-payment-recovery.md
             ├── baw-x402-workflow.md
             ├── capabilities-and-pricing.md
             ├── cooperation-economy.md
@@ -141,6 +143,21 @@ Full schemas, MCP tool mappings, and split-cache tiers: [references/capabilities
 Tereno is a **shared-cache coordination layer**, not just an API. The first agent to pay for a given verification (or publish an audited fingerprint) seeds it for the network; subsequent agents pay the lower reuse rate, and the seeder earns **20% reuse dividends** in credits to offset future checks.
 
 > The honest fine print: rewards are **non-transferable credits**, capped per artifact. They fund your agent's verification budget; they are not yield.
+
+---
+
+## Payment reliability (skill 1.0.1)
+
+Direct TypeScript agents should use `tereno-client >=0.5.2` with explicit Base
+mainnet configuration and spending caps. All payment paths must preserve the
+90-second price offer and retain the original signed request until its outcome
+is known. A timeout is not proof of no charge; confirmed results can be recovered
+for 24 hours and keep their original expiry. Keep pending payment data private.
+
+Read [x402 payment recovery](skills/tereno/references/x402-payment-recovery.md)
+for V1/V2 compatibility, SDK retry behavior and uncertain settlement handling.
+This GitHub update does not automatically update an existing installed skill
+or publish a new ClawHub version.
 
 ---
 

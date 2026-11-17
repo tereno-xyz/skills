@@ -4,7 +4,7 @@ description: |
   Pre-action onchain security cache, exit simulation, cabal detection, oracle dispute auditing, and cooperative dividend economy on Base (x402 / USDC). Use before interacting with unfamiliar Base contracts or newly launched tokens, before placing prediction market bets, when seeking open verification bounties (+$0.005 bonus + 20% reuse dividends), or when enforcing ERC-8183 escrow and ERC-7579 smart account guard proofs. Compatible with Binance Agentic Wallet (baw x402-payment), OpenClaw, and MCP.
 license: MIT
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: tereno-xyz
   homepage: "https://www.tereno.xyz"
   openclaw:
@@ -79,8 +79,10 @@ Full schemas and MCP tool mappings: see [references/capabilities-and-pricing.md]
    ```bash
    baw x402-payment sign --paymentId "<paymentId>" --selectedIndex <index> --json
    ```
-5. Replay the exact original HTTP request adding `PAYMENT-SIGNATURE: <paymentHeaderValue>`.
-6. Verify settlement metadata in the returned `PAYMENT-RESPONSE` header and store `artifactId` + `receipt` for peer reuse.
+5. Preserve the complete `tereno-offer` extension in the payment envelope and replay the exact original method, URL/query, JSON body and wallet header with `PAYMENT-SIGNATURE: <paymentHeaderValue>`. The offered price is held for 90 seconds; inspect `X-Tereno-Price-Valid-Until`.
+6. Verify `success: true` and the transaction in `PAYMENT-RESPONSE`, then store the result and receipt. A timeout is an uncertain outcome: retry the SAME signed request, never sign again to recover it. Follow [payment recovery](references/x402-payment-recovery.md) for pending responses and version compatibility.
+
+For TypeScript HTTP agents, use `tereno-client >=0.5.2`, explicitly select Base `eip155:8453` and configure the per-call budget. Read [payment recovery](references/x402-payment-recovery.md) before implementing retries.
 
 Detailed step-by-step script & pre-trade recipes: [references/baw-x402-workflow.md](references/baw-x402-workflow.md).
 
@@ -123,11 +125,13 @@ Every Tereno capability returns a deterministic policy-ready contract:
 3. **Pass `artifactId`, never raw claims:** When collaborating with peer agents, share `artifactId` (`sha256:...`) and `receiptUrl` so peers can verify provenance for free via `GET /api/v1/evidence/{artifactId}`.
 4. **Check `validUntilBlock` before acting:** On-chain state moves fast (`token.launch.guard` = `12s`, `contract.guard` = `10s`). Never rely on an expired artifact for execution.
 5. **Follow x402 payment safety:** Always verify `network` is `eip155:8453` (Base Mainnet) and confirm quoted USD amounts before signing with `baw x402-payment sign`.
-6. **Use a 10–15s HTTP timeout on paid replays:** Cached verdicts resolve in `<200ms` (`executionMs: 0`), while cold cache misses (`token.launch.guard`, `token.holders.guard`) run live Base RPC simulations (~1.2–2.5s) plus x402 settlement (~3–5s total). Pass `--max-time 15` (in `curl`) or set `timeoutMs >= 10000` so agents never abort mid-settlement.
+6. **Bound timeouts and recover the original payment:** Use a 15s HTTP timeout including the response body. Timeouts can still occur after settlement: retain the signed request privately and retry it without signing a new authorization. Keep budget reserved while pending. After three transient retries, stop automatic retries and report the unresolved payment. Recovered results retain their ORIGINAL validity; recovery does not refresh an expired verdict.
 
 ---
 
 ## Reference Library
+
+- **[x402 Versions, Price Holds & Payment Recovery](references/x402-payment-recovery.md)** — Read before implementing direct/skill payments, signing retries or handling timeouts.
 
 - **[Capabilities, Endpoints & MCP Tools](references/capabilities-and-pricing.md)** — Exact routes, query/body schemas, cache tiers, and MCP names.
 - **[Binance Agentic Wallet (`baw`) x402 Integration](references/baw-x402-workflow.md)** — End-to-end shell recipes for Base swaps and Prediction Markets.

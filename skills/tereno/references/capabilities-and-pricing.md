@@ -98,12 +98,12 @@ Settlement rail: **x402 v2 over HTTP**, **USDC on Base (`eip155:8453`)** (`0x833
 
 ## 4. Expected Latency & HTTP Client Timeouts
 
-Paid responses only settle x402 payments after verification succeeds:
+Settlement follows a successfully verified payment and a successful capability handler result. A lost HTTP response can hide an already settled payment; it does not prove that nothing was charged.
 
 | Call Path | Server Compute | End-to-End (with x402 Settlement) | Recommended HTTP Timeout |
 |---|---|---|---|
-| Cache hit (`executionMs: 0`) | `< 200ms` | `~1–2s` | `5s+` |
-| Cold miss (`prediction.evidence`, `contract.guard`, `token.metadata`, `chain.snapshot`) | `~0.2–0.6s` | `~1.5–3s` | `10s+` |
+| Cache hit (`executionMs: 0`) | `< 200ms` | `~1–2s` | `15s` |
+| Cold miss (`prediction.evidence`, `contract.guard`, `token.metadata`, `chain.snapshot`) | `~0.2–0.6s` | `~1.5–3s` | `15s` |
 | Cold miss (`token.launch.guard`, `token.holders.guard`) | `~1.2–2.5s` | `~3–5s` | `10–15s` (`--max-time 15`) |
 
-> Always configure a **10s–15s HTTP request timeout** when replaying `PAYMENT-SIGNATURE` for cold `token.launch.guard` or `token.holders.guard` requests so the agent does not abort while Base RPC simulation and x402 facilitator settlement finish.
+> Use a **15s timeout including the response body** as a starting point, not a guarantee of delivery. Preserve the `tereno-offer` extension for the 90s price hold. On timeout or pending settlement, follow [x402 payment recovery](x402-payment-recovery.md): replay the original signature and request, without another authorization.

@@ -8,63 +8,106 @@
 
 Use this exact sequence for any paid Tereno capability (`token.launch.guard`, `token.holders.guard`, `contract.guard`, `token.metadata`, `chain.snapshot`, or `prediction.evidence`):
 
-### Step 1 — Trigger the 402 Challenge & Capture `PAYMENT-REQUIRED`
-Send the request and dump response headers (`-D -`). Include `X-Tereno-Skill: 1.0` and a descriptive `User-Agent` (recommended: `tereno-skill/1.0 (openclaw-baw)`):
+### Step 1 — Trigger the 402 Challenge & Keep Private Request State
+
+Requires `curl`, `jq` and an already configured `baw` wallet. Set `TARGET_URL`
+from the actual task. This GET example uses `token.launch.guard`; a POST must
+use the same method and body file on both the challenge and every paid replay.
 
 ```bash
+umask 077
+TERENO_PAYMENT_DIR=$(mktemp -d)
 TARGET_URL="https://www.tereno.xyz/api/v1/capabilities/token.launch.guard/invoke?address=0x..."
+printf '%s' "$TARGET_URL" > "$TERENO_PAYMENT_DIR/url.txt"
 
-PAYMENT_REQUIRED=$(curl -s -D - -o /dev/null \
-  -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
-  -H "X-Tereno-Skill: 1.0" \
-  "$TARGET_URL" | grep -i '^payment-required:' | sed -E 's/^[^:]+:[[:space:]]*//; s/\r$//')
+TERENO_STATUS=$(curl -sS --max-time 15 \
+  -D "$TERENO_PAYMENT_DIR/challenge-headers.txt" \
+  -o "$TERENO_PAYMENT_DIR/challenge-body.json" -w '%{http_code}' \
+  -H "User-Agent: tereno-skill/1.0.1 (openclaw-baw)" \
+  -H "X-Tereno-Skill: 1.0" "$TARGET_URL")
+[ "$TERENO_STATUS" = "402" ] || { printf 'Expected a 402 challenge; stop before signing.\n' >&2; exit 1; }
+TERENO_PAYMENT_REQUIRED=$(awk 'tolower($0) ~ /^payment-required:/ { sub(/^[^:]+:[[:space:]]*/, ""); sub(/\r$/, ""); print }' "$TERENO_PAYMENT_DIR/challenge-headers.txt")
+[ -n "$TERENO_PAYMENT_REQUIRED" ] || { printf 'Missing V2 payment header; stop before signing.\n' >&2; exit 1; }
 ```
 
-### Step 2 — Preview Payment Options with `baw`
-Pass the base64 `PAYMENT-REQUIRED` header directly into `baw x402-payment preview`:
+Inspect `X-Tereno-Price-Valid-Until`. V2 clients must use `PAYMENT-REQUIRED`,
+even though the compatibility response also has a V1 JSON body.
+
+### Step 2 — Preview the Offered Terms
 
 ```bash
-PREVIEW_JSON=$(baw x402-payment preview --paymentRequirements "$PAYMENT_REQUIRED" --json)
-echo "$PREVIEW_JSON"
+baw x402-payment preview --paymentRequirements "$TERENO_PAYMENT_REQUIRED" --json \
+  > "$TERENO_PAYMENT_DIR/preview.json"
 ```
 
-Verify in the JSON output:
-- `data.options[i].status` is `"READY_TO_SIGN"`
-- `data.options[i].binanceChainId` is `"8453"` (Base Mainnet)
-- `data.options[i].tokenSymbol` is `"USDC"`
-- `data.options[i].amountUsd` matches expected Tereno price (`$0.01`–`$0.07`)
+Inspect only the fields needed to choose the payment:
+- `data.options[i].status` is `"READY_TO_SIGN"`.
+- `data.options[i].binanceChainId` is `"8453"` (Base Mainnet).
+- Asset is Base USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`.
+- `data.options[i].amountUsd` is within the caller's authorized per-call AND
+  remaining daily budget. The current ordinary range is $0.01–$0.07.
+- Destination and `exact` / EIP-3009 terms match the server's challenge.
 
-Extract `paymentId` and the chosen `selectedIndex` (usually `1`).
+Extract `PAYMENT_ID` and `SELECTED_INDEX` from the preview. Do not guess the
+index. If an UNUSED offer expires before submitting a signed payment, fetch a
+fresh challenge and preview it again.
 
-### Step 3 — Confirm with User & Sign
-Per `baw` guardrails, confirm the USD spend unless the user pre-authorized automated safety checks:
+### Step 3 — Sign Once & Retain the Authorization Privately
+
+Use existing spending authorization, or obtain confirmation as required by the
+wallet's guardrails. Never sign again merely because a submitted call timed out.
 
 ```bash
-SIGN_JSON=$(baw x402-payment sign --paymentId "$PAYMENT_ID" --selectedIndex "$SELECTED_INDEX" --json)
-echo "$SIGN_JSON"
+baw x402-payment sign --paymentId "$PAYMENT_ID" --selectedIndex "$SELECTED_INDEX" --json \
+  > "$TERENO_PAYMENT_DIR/signed.json"
+TERENO_HEADER_NAME=$(jq -er '.data.paymentHeaderName' "$TERENO_PAYMENT_DIR/signed.json")
+TERENO_HEADER_VALUE=$(jq -er '.data.paymentHeaderValue' "$TERENO_PAYMENT_DIR/signed.json")
+[ "$(printf '%s' "$TERENO_HEADER_NAME" | tr '[:upper:]' '[:lower:]')" = "payment-signature" ] || { printf 'Expected V2 PAYMENT-SIGNATURE; inspect wallet configuration.\n' >&2; exit 1; }
+printf 'User-Agent: tereno-skill/1.0.1 (openclaw-baw)\nX-Tereno-Skill: 1.0\nPAYMENT-SIGNATURE: %s\n' "$TERENO_HEADER_VALUE" \
+  > "$TERENO_PAYMENT_DIR/paid-request-headers.txt"
 ```
 
-Extract:
-- `data.paymentHeaderName` (for x402 v2: `PAYMENT-SIGNATURE`)
-- `data.paymentHeaderValue` (base64 signed EIP-3009 authorization)
+Do not echo `signed.json` or the payment header. Before sending, inspect the
+V2 envelope privately and verify that it preserves the challenge's complete
+`extensions["tereno-offer"]` unchanged. Without this extension the wallet does
+not obtain the 90s price hold. If the installed wallet drops extensions, stop
+before submission and use a client that preserves them; do not assume native
+V2 support proves this behavior. See [payment recovery](x402-payment-recovery.md).
 
-> Note: If `data.approveTxHash` is non-null (Permit2 flow), wait for confirmation via `baw wallet tx-history --tx <hash>` before replaying. Base USDC normally uses `eip3009` directly (`approveTxHash: null`).
+Base USDC EIP-3009 normally needs no approval transaction. If the wallet instead
+proposes Permit2 or an approval, re-check that the payment scheme and additional
+transaction are supported and authorized before proceeding; this recipe covers
+EIP-3009 exact payments only.
 
-### Step 4 — Replay the Original Request with `PAYMENT-SIGNATURE`
-Replay the exact URL (and JSON body if `POST` for `prediction.evidence`) with the signed header and a `15s` timeout (`--max-time 15`):
+### Step 4 — Submit & Recover the SAME Signed Request
 
 ```bash
-curl -s --max-time 15 -D /tmp/tereno_headers.txt \
-  -H "User-Agent: tereno-skill/1.0 (openclaw-baw)" \
-  -H "X-Tereno-Skill: 1.0" \
-  -H "PAYMENT-SIGNATURE: $PAYMENT_HEADER_VALUE" \
-  "$TARGET_URL"
+TERENO_STATUS=$(curl -sS --max-time 15 \
+  -D "$TERENO_PAYMENT_DIR/response-headers.txt" \
+  -o "$TERENO_PAYMENT_DIR/response-body.json" -w '%{http_code}' \
+  -H "@$TERENO_PAYMENT_DIR/paid-request-headers.txt" \
+  "$(cat "$TERENO_PAYMENT_DIR/url.txt")") || TERENO_STATUS=timeout
+printf 'HTTP outcome: %s\n' "$TERENO_STATUS"
 ```
 
-- Inspect `/tmp/tereno_headers.txt` for `PAYMENT-RESPONSE` (base64 settlement metadata containing Base `txHash`).
-- Inspect the JSON response `verdict` (`allow` | `review` | `block`), `validUntilBlock`, and `artifactId`.
+On timeout, incomplete body, in-progress 409 or `503 payment_recovery_pending`,
+keep the authorization and budget reservation. Re-run **Step 4 only**, honoring
+`Retry-After`; do not repeat signing. Bound automatic retries to three and then
+report pending status for reconciliation. A timeout can occur after settlement.
+Keep the request files until the outcome is resolved; do not delete them in an
+error cleanup hook. Use durable private storage if recovery must survive a
+process restart or temporary-directory cleanup.
 
-> Latency note: Cache hits return in `< 200ms` (`executionMs: 0`). Cold misses for `token.launch.guard` and `token.holders.guard` take `~1.2–2.5s` of live Base RPC simulation plus x402 settlement (`~3–5s` end-to-end), so always keep HTTP client timeouts at `10–15s` (`--max-time 15`) to avoid premature aborts before `PAYMENT-RESPONSE` arrives.
+For POST `prediction.evidence`, use `--request POST --header 'Content-Type: application/json'`
+and `--data-binary @<original-private-body-file>` on both unsigned and signed
+requests. Preserve the original URL/query, body and any wallet header throughout.
+
+On confirmed success, privately decode `PAYMENT-RESPONSE` and require
+`success: true` plus `transaction`. A recovered response has
+`X-Tereno-Replayed: true` and its ORIGINAL validity window. Check the result's
+`verdict`, limitations and expiry before acting; recovery does not refresh a
+stale security verdict. See [payment recovery](x402-payment-recovery.md) for
+version compatibility, pending errors and the 24h confirmed-result recovery window.
 
 ---
 
