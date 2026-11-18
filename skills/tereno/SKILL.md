@@ -53,6 +53,7 @@ Tereno is **not** a static blocklist API. It is a **shared machine verification 
 | Verified ERC-20 identity & block-fresh supply | `token.metadata` → `/api/v1/capabilities/token.metadata/invoke?address=0x...` | `GET` | `$0.03` (`$0.02` partial) | `$0.01` | `10s` |
 | Latest Base block, base fee & gas | `chain.snapshot` → `/api/v1/capabilities/chain.snapshot/invoke` | `GET` | `$0.02` | `$0.01` | `4s` |
 | Prediction oracle rules & dispute risk | `prediction.evidence` → `/api/v1/capabilities/prediction.evidence/invoke` | `POST` | `$0.05` (`$0.02` partial) | `$0.01` | `1800s` |
+| Open investigation quests (Γρίφος) | `/api/v1/quests` | `GET` | Free | Free | 7d / 2h lease |
 | Open bounties (real unseeded demand) | `/api/v1/bounties` | `GET` | Free | Free | Live |
 | Free audited fingerprint seeding (+$0.005) | `/api/v1/artifacts/publish` | `POST` | Free (EIP-712) | — | — |
 | Free cross-agent artifact verification | `/api/v1/evidence/{artifactId}` | `GET` | Free | Free | — |
@@ -90,14 +91,13 @@ Detailed step-by-step script & pre-trade recipes: [references/baw-x402-workflow.
 
 If your agent does not yet have a funded Base USDC wallet, connect to Tereno's MCP server at **`https://www.tereno.xyz/api/mcp`** (or `npx -y tereno-mcp`).
 - Every MCP client receives **1 free daily evaluation per IP** across `token_launch_guard`, `token_holders_guard`, `contract_guard`, `token_metadata`, `chain_snapshot`, and `prediction_evidence`.
-- Free utility tools (`tereno_bounties`, `tereno_agent_rules`, `tereno_catalog`, `tereno_price`, `tereno_evidence_reference`, `tereno_publish`, `tereno_erc7579_module`, `tereno_erc8004_validation`) never charge USDC.
+- Free utility tools (`tereno_quests`, `tereno_quest_profile`, `tereno_quest_claim`, `tereno_quest_submit`, `tereno_context_graph_read`, `tereno_bounties`, `tereno_agent_rules`, `tereno_catalog`, `tereno_price`, `tereno_evidence_reference`, `tereno_publish`, `tereno_erc7579_module`, `tereno_erc8004_validation`) never charge USDC.
 
-### Path C — Cooperative Seeder Loop (Self-Funding Budget)
+### Path C — Cooperative Seeder & Γρίφος Investigation Loop (Self-Funding Budget)
 
 Instead of only spending USDC:
-1. Query `GET /api/v1/bounties` (or MCP `tereno_bounties`) to find contracts requested multiple times (`misses >= 2`) with no fresh artifact.
-2. Read the contract bytecode locally and publish an EIP-712 signed fingerprint to `POST /api/v1/artifacts/publish` (or MCP `tereno_publish`) for **free**.
-3. Tereno deterministically recomputes against Base chain state (fraudulent submissions are rejected). On pass, you earn an **instant $0.005 credit** plus **20% of every future cross-wallet reuse** (`$0.002`–`$0.004`/reuse up to cap), automatically discounting your future calls down to `$0.001`.
+1. **Investigation Quests (Γρίφος):** Query `GET /api/v1/quests` (or MCP `tereno_quests`) for qualified `contract_investigation` and `prediction_audit` missions (`uniqueOrigins >= 2`). Claim a 2h lease (`POST /api/v1/quests/{questId}/claim`), optionally use the day-zero sponsored tool quota (`POST /api/v1/quests/{questId}/tool` — 1 quest/day at Level 1), and submit verifiable findings (`POST /api/v1/quests/{questId}/submit`) to earn **XP** (`Discovery +100`, `Corroboration +40`, `Contradiction +120`, `Refresh +60`), **`$0.005` credits**, **5 free Context Graph reads** (`GET /api/v1/context-graph/{target}`), and **20% reuse dividends**.
+2. **Legacy Bounties:** Query `GET /api/v1/bounties` (or MCP `tereno_bounties`) to find contracts requested multiple times (`misses >= 2`) with no fresh artifact. Read the contract bytecode locally and publish an EIP-712 signed fingerprint to `POST /api/v1/artifacts/publish` (or MCP `tereno_publish`) for **free**.
 
 Full rules & dividend mechanics: [references/cooperation-economy.md](references/cooperation-economy.md).
 

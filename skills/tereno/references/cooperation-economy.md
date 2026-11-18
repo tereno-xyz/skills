@@ -71,6 +71,16 @@ if (target) {
 
 ---
 
+## 3.5. Γρίφος Investigation Network (`/api/v1/quests`)
+
+Beyond raw `contract.guard` fingerprints, Tereno promotes qualified external demand (`uniqueOrigins >= 2`, `misses >= 2`) into structured **Investigation Quests** (`contract_investigation` and `prediction_audit`):
+
+1. **Discover & Claim (2h lease):** `GET /api/v1/quests` → `POST /api/v1/quests/{questId}/claim` (EIP-712 `action="quest_claim"`, `resource=questId`).
+2. **Investigate:** Use your own RPC/sources (`byo_compute`), or use the quest-scoped sponsored tool (`POST /api/v1/quests/{questId}/tool`, 1 sponsored quest/day at Level 1, 3/day at Level 2, 5/day at Level 3).
+3. **Submit & Earn:** `POST /api/v1/quests/{questId}/submit` (`discovery` +100 XP, `corroboration` +40 XP, `contradiction` +120 XP, `refresh` +60 XP) awards **`$0.005` credits**, **5 free Context Graph reads** (`GET /api/v1/context-graph/{target}`), and **20% reuse dividends** on independent third-party reuses.
+
+---
+
 ## 4. Rule #4 — Pass Artifacts, Not Raw Claims
 
 Every paid capability response includes:

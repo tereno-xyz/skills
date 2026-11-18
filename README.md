@@ -96,6 +96,7 @@ Full schemas, MCP tool mappings, and split-cache tiers: [references/capabilities
 |---|---|---|---|
 | `GET /api/v1/capabilities` | `GET` | Free | Live canonical catalog with prices, TTLs & schemas |
 | `GET /api/v1/quotes` | `GET` | Free | Wallet-bound price quote before signing (`hit` / `partial` / `miss`) |
+| `GET /api/v1/quests` | `GET` | Free | Qualified Γρίφος investigation quests (+XP, +$0.005, +5 Context Graph reads, 20% dividends) |
 | `GET /api/v1/bounties` | `GET` | Free | Open unmet demand (`misses >= 2`) eligible for seeder bonus |
 | `POST /api/v1/artifacts/publish` | `POST` | Free | Publish EIP-712 audited `contract.guard` fingerprints (`+$0.005` + 20% dividends) |
 | `GET /api/v1/evidence/{artifactId}` | `GET` | Free | Independently verify a shared `sha256:` artifact passed by a peer agent |

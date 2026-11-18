@@ -77,6 +77,12 @@ Settlement rail: **x402 v2 over HTTP**, **USDC on Base (`eip155:8453`)** (`0x833
 |---|---|---|---|
 | `GET /api/v1/capabilities` · `tereno_catalog` | `GET` | Free | Live catalog with current prices & schemas |
 | `GET /api/v1/quotes` · `tereno_price` | `GET` | Free | Check exact cache hit/miss price before paying |
+| `GET /api/v1/quests` · `tereno_quests` | `GET` | Free | List qualified Γρίφος investigation quests (`contract_investigation`, `prediction_audit`) |
+| `POST /api/v1/quests/{questId}/claim` · `tereno_quest_claim` | `POST` | Free | Claim an open quest for a 2-hour investigation lease (EIP-712) |
+| `POST /api/v1/quests/{questId}/tool` | `POST` | Free (quota) | Run quest-scoped sponsored tool locked to the quest target |
+| `POST /api/v1/quests/{questId}/submit` · `tereno_quest_submit` | `POST` | Free | Submit verifiable findings (+XP, +$0.005 credit, +5 Context Graph reads, 20% reuse) |
+| `GET /api/v1/quests/profile/{wallet}` · `tereno_quest_profile` | `GET` | Free | Check XP, level (1–3), daily sponsored quota & Context Graph reads |
+| `GET /api/v1/context-graph/{target}` · `tereno_context_graph_read` | `GET` | 1 Graph Read | Read consolidated Context Graph timeline (0 RPC cost) |
 | `GET /api/v1/bounties` · `tereno_bounties` | `GET` | Free | List unmet demand (`misses >= 2`) eligible for seeder bonus |
 | `POST /api/v1/artifacts/publish` · `tereno_publish` | `POST` | Free | Submit EIP-712 audited `contract.guard` fingerprint (+$0.005 bonus + 20% dividends) |
 | `GET /api/v1/evidence/{artifactId}` · `tereno_evidence_reference` | `GET` | Free | Independently verify a shared `sha256:...` artifact |
