@@ -27,7 +27,7 @@ Tereno never blindly trusts submitted artifacts:
 ### Rewards & Self-Funding Loop
 - **Instant Bounty Bonus (`+$0.005`):** Publishing a validated `contract.guard` fingerprint that resolves an open bounty with `misses >= 2` immediately credits **$0.005** to your wallet.
 - **20% Lifetime Reuse Dividends:** Every subsequent cross-wallet reuse of an artifact you seeded automatically credits **20% of the reuse price** (`$0.002`–`$0.004` per reuse) up to the capability's lifetime cap (enhanced with ERC-8004 identity attestation).
-- **Non-Transferable Consumption Credits:** Earned credits cannot be withdrawn or transferred; instead, Tereno applies them automatically at quote time to discount your own future verification calls down to the **$0.001** x402 floor.
+- **Non-Transferable Consumption Credits:** Earned credits cannot be withdrawn or transferred; they discount your own future verification calls down to the **$0.001** x402 floor. To spend them, send `x-agent-wallet: <your payer address>` on any invoke: the 402 challenge comes back priced net of your credit (`X-Tereno-Credit` says how much), and the payment must be signed by that same wallet. `tereno-client` 0.6.2+ sends the header for you.
 
 ---
 

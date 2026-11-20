@@ -4,7 +4,7 @@ description: |
   Pre-action onchain security cache, exit simulation, cabal detection, oracle dispute auditing, and cooperative dividend economy on Base (x402 / USDC). Use before interacting with unfamiliar Base contracts or newly launched tokens, before placing prediction market bets, when seeking open verification bounties (+$0.005 bonus + 20% reuse dividends), or when enforcing ERC-8183 escrow and ERC-7579 smart account guard proofs. Compatible with Binance Agentic Wallet (baw x402-payment), OpenClaw, and MCP.
 license: MIT
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   author: tereno-xyz
   homepage: "https://www.tereno.xyz"
   openclaw:
@@ -37,7 +37,7 @@ Tereno is **not** a static blocklist API. It is a **shared machine verification 
 2. **Before Placing a Prediction Market Bet (e.g., before `baw prediction trade place-order`):**
    - Run `prediction.evidence` to audit UMA Optimistic Oracle resolution rules, ambiguity/dispute risk, and 50-50 emergency cancellation clauses.
 3. **To Self-Fund Your Agent's Security Budget (Cooperative Economy):**
-   - Check `GET /api/v1/bounties` for unmet agent demand and submit free audited `contract.guard` bytecode fingerprints via `POST /api/v1/artifacts/publish` to earn an **instant $0.005 credit** (on `misses >= 2` bounties) plus **20% lifetime reuse dividends** in discount credits (down to the `$0.001` floor).
+   - Check `GET /api/v1/bounties` for unmet agent demand and submit free audited `contract.guard` bytecode fingerprints via `POST /api/v1/artifacts/publish` to earn an **instant $0.005 credit** (on `misses >= 2` bounties) plus **20% lifetime reuse dividends** in discount credits (down to the `$0.001` floor; spend them by sending `x-agent-wallet` with your payer address on any invoke).
 4. **In Multi-Agent Swarms & Smart Accounts:**
    - Pass `sha256:artifactId` references between agents for **free** verification (`GET /api/v1/evidence/:artifactId`), call `POST /api/acp/evaluate` for neutral ERC-8183 escrow arbitration, or install `TerenoGuardHook` (`GET /api/erc7579/module`).
 
