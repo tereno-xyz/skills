@@ -4,7 +4,7 @@ description: |
   Pre-action onchain security cache, exit simulation, cabal detection, oracle dispute auditing, and cooperative dividend economy on Base (x402 / USDC). Use before interacting with unfamiliar Base contracts or newly launched tokens, before placing prediction market bets, when seeking open verification bounties (+$0.005 bonus + 20% reuse dividends), or when enforcing ERC-8183 escrow and ERC-7579 smart account guard proofs. Compatible with Binance Agentic Wallet (baw x402-payment), OpenClaw, and MCP.
 license: MIT
 metadata:
-  version: "1.0.2"
+  version: "1.0.3"
   author: tereno-xyz
   homepage: "https://www.tereno.xyz"
   openclaw:
