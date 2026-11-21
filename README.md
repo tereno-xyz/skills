@@ -177,7 +177,7 @@ or publish a new ClawHub version.
 [A2A Agent Card](https://www.tereno.xyz/.well-known/agent-card.json) ·
 [tereno-mcp](https://github.com/tereno-xyz/tereno-mcp) ·
 [tereno-client SDK](https://www.npmjs.com/package/tereno-client) ·
-[plugin-tereno for ElizaOS](https://github.com/RobMartello/plugin-tereno)
+[plugin-tereno for ElizaOS](https://github.com/tereno-xyz/plugin-tereno)
 
 ---
 
