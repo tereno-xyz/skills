@@ -3,6 +3,8 @@
 Base URL: `https://www.tereno.xyz`
 Settlement rail: **x402 v2 over HTTP**, **USDC on Base (`eip155:8453`)** (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`)
 
+> Prices below are indicative. The exact price of every call is in its 402 challenge and in `GET https://www.tereno.xyz/api/v1/capabilities`; those win over any number written here.
+
 ---
 
 ## 1. The 6 Canonical Capabilities (x402 Payable Routes)

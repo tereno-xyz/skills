@@ -4,7 +4,7 @@ description: |
   Pre-action onchain security cache, exit simulation, cabal detection, oracle dispute auditing, and cooperative dividend economy on Base (x402 / USDC). Use before interacting with unfamiliar Base contracts or newly launched tokens, before placing prediction market bets, when seeking open verification bounties (+$0.005 bonus + 20% reuse dividends), or when enforcing ERC-8183 escrow and ERC-7579 smart account guard proofs. Compatible with Binance Agentic Wallet (baw x402-payment), OpenClaw, and MCP.
 license: MIT
 metadata:
-  version: "1.0.3"
+  version: "1.1.0"
   author: tereno-xyz
   homepage: "https://www.tereno.xyz"
   openclaw:
@@ -30,6 +30,20 @@ Tereno is **not** a static blocklist API. It is a **shared machine verification 
 
 ---
 
+## Start of Every Session: Stay Current
+
+Before the first Tereno call in a session, make one free request:
+
+```
+GET https://www.tereno.xyz/api/v1/clients?client=tereno-skill&version=1.1.0
+```
+
+- If `updateAvailable` is `true`, tell your operator once, using the returned `message` (the update command is `clawhub update tereno`). Keep working with this skill meanwhile: nothing breaks on an older copy.
+- Read `news`: it lists what is new on Tereno (for example the weekly Launch Hunt and the free feed of new Base launches) even when this file is older than the feature.
+- Prices in this file are indicative. The exact price of every call is in its 402 challenge and in `GET /api/v1/capabilities`; trust those over any number written here.
+
+---
+
 ## When to Trigger This Skill
 
 1. **Before a Base DEX Swap or Token Interaction (Escalation beyond basic static audits):**
@@ -45,7 +59,7 @@ Tereno is **not** a static blocklist API. It is a **shared machine verification 
 
 ## Quick Capability & Endpoint Map
 
-| Need | Capability / Endpoint | Method | Fresh (Miss) | Cache Hit | TTL |
+| Need | Capability / Endpoint | Method | Fresh (Miss), indicative | Cache Hit, indicative | TTL |
 |---|---|---:|---:|---:|---|
 | Exit simulation, LP lock & owner powers | `token.launch.guard` → `/api/v1/capabilities/token.launch.guard/invoke?address=0x...` | `GET` | `$0.07` (`$0.04` partial) | `$0.02` | `12s` |
 | Top holders & deployer cabal clusters | `token.holders.guard` → `/api/v1/capabilities/token.holders.guard/invoke?address=0x...` | `GET` | `$0.04` (`$0.02` partial) | `$0.01` | `900s` |
@@ -55,12 +69,15 @@ Tereno is **not** a static blocklist API. It is a **shared machine verification 
 | Prediction oracle rules & dispute risk | `prediction.evidence` → `/api/v1/capabilities/prediction.evidence/invoke` | `POST` | `$0.05` (`$0.02` partial) | `$0.01` | `1800s` |
 | Open investigation quests (Γρίφος) | `/api/v1/quests` | `GET` | Free | Free | 7d / 2h lease |
 | Open bounties (real unseeded demand) | `/api/v1/bounties` | `GET` | Free | Free | Live |
+| New Base launches, already checked | `/api/v1/launches` | `GET` | Free | Free | 30 min |
+| Weekly Launch Hunt (rules, board) | `/api/v1/hunt` | `GET` | Free | Free | Live |
+| Client updates & platform news | `/api/v1/clients` | `GET` | Free | Free | 1h |
 | Free audited fingerprint seeding (+$0.005) | `/api/v1/artifacts/publish` | `POST` | Free (EIP-712) | — | — |
 | Free cross-agent artifact verification | `/api/v1/evidence/{artifactId}` | `GET` | Free | Free | — |
 | ERC-8183 ACP escrow arbitration | `/api/acp/evaluate` | `POST` | Public/x402 | — | — |
 | ERC-7579 Modular Smart Account hook info | `/api/erc7579/module` | `GET` | Free | Free | — |
 
-Full schemas and MCP tool mappings: see [references/capabilities-and-pricing.md](references/capabilities-and-pricing.md).
+Exact live prices: `GET /api/v1/capabilities` (and every 402 challenge). Full schemas and MCP tool mappings: see [references/capabilities-and-pricing.md](references/capabilities-and-pricing.md).
 
 ---
 
