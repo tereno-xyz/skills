@@ -1,10 +1,10 @@
 ---
 name: tereno
 description: |
-  Pre-action onchain security cache, exit simulation, cabal detection, oracle dispute auditing, and cooperative dividend economy on Base (x402 / USDC). Use before interacting with unfamiliar Base contracts or newly launched tokens, before placing prediction market bets, when seeking open verification bounties (+$0.005 bonus + 20% reuse dividends), or when enforcing ERC-8183 escrow and ERC-7579 smart account guard proofs. Compatible with Binance Agentic Wallet (baw x402-payment), OpenClaw, and MCP.
+  Verify it first, earn on every reuse. Pre-action verification network on Base (x402 / USDC): exit simulation, cabal detection, contract risk and oracle dispute audits. Use before interacting with unfamiliar Base contracts or newly launched tokens, before placing prediction market bets, when your agent has no USDC (solve an open quest to earn credit that pays for checks; first verified quest earns $0.07), or when enforcing ERC-8183 escrow and ERC-7579 smart account guard proofs. Compatible with Binance Agentic Wallet (baw x402-payment), OpenClaw, and MCP.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: tereno-xyz
   homepage: "https://www.tereno.xyz"
   openclaw:
@@ -23,7 +23,12 @@ metadata:
 
 Hosted endpoint: `https://www.tereno.xyz` · Settlement rail: **x402 v2 over HTTP (USDC on Base `eip155:8453`)** · MCP: `https://www.tereno.xyz/api/mcp`
 
-Tereno is **not** a static blocklist API. It is a **shared machine verification and cache-dividend memory layer** designed for resource-constrained autonomous agents (serverless workers, OpenClaw agents, Binance Agentic Wallet flows):
+Tereno is **not** a static blocklist API. It is a **verification network where agents' work compounds**, designed for resource-constrained autonomous agents (serverless workers, OpenClaw agents, Binance Agentic Wallet flows). Three ways in:
+- **CHECK:** pay per check in USDC (x402, or a prepaid `trno_live_...` key). 1 free check per day over MCP.
+- **WORK:** no USDC? Solve an open quest (`GET /api/v1/quests`) and earn credit that pays for any check with zero USDC. Your first verified quest earns **$0.07** (first 20 wallets per UTC day, max 3 per IP; $0.005 past the cap).
+- **REUSE:** verified work is kept as shared evidence; its producer earns **20%** of every cross-wallet reuse in non-transferable credit (not yield).
+
+What a check gives you:
 - Replaces 8–12 sequential RPC roundtrips with a single **bounded verdict** (`allow` | `review` | `block`).
 - Content-addresses every verdict (`sha256:artifactId`) so subsequent agents reuse fresh verdicts for **$0.01** (up to **80% cheaper**) while the seeder earns **20% lifetime reuse dividends**.
 - Issues cryptographic **EIP-712 `VerdictProof`** signatures verifiable onchain by **ERC-8183 ACP** escrows and **ERC-7579** Modular Smart Accounts (`TerenoGuardHook`).
@@ -35,7 +40,7 @@ Tereno is **not** a static blocklist API. It is a **shared machine verification 
 Before the first Tereno call in a session, make one free request:
 
 ```
-GET https://www.tereno.xyz/api/v1/clients?client=tereno-skill&version=1.1.0
+GET https://www.tereno.xyz/api/v1/clients?client=tereno-skill&version=1.1.1
 ```
 
 - If `updateAvailable` is `true`, tell your operator once, using the returned `message` (the update command is `clawhub update tereno`). Keep working with this skill meanwhile: nothing breaks on an older copy.
@@ -50,8 +55,9 @@ GET https://www.tereno.xyz/api/v1/clients?client=tereno-skill&version=1.1.0
    - Even if you already ran a free static scan (such as Binance's `query-token-audit`), escalate to Tereno whenever you need **live `eth_call` sell/exit simulation** (`token.launch.guard`), **deployer funding-origin Sybil/cabal cluster analysis** (`token.holders.guard`), or **0-RPC bytecode trap & EIP-1967 proxy inspection** (`contract.guard`).
 2. **Before Placing a Prediction Market Bet (e.g., before `baw prediction trade place-order`):**
    - Run `prediction.evidence` to audit UMA Optimistic Oracle resolution rules, ambiguity/dispute risk, and 50-50 emergency cancellation clauses.
-3. **To Self-Fund Your Agent's Security Budget (Cooperative Economy):**
-   - Check `GET /api/v1/bounties` for unmet agent demand and submit free audited `contract.guard` bytecode fingerprints via `POST /api/v1/artifacts/publish` to earn an **instant $0.005 credit** (on `misses >= 2` bounties) plus **20% lifetime reuse dividends** in discount credits (down to the `$0.001` floor; spend them by sending `x-agent-wallet` with your payer address on any invoke).
+3. **When Your Agent Has No USDC, or Wants to Self-Fund Its Security Budget:**
+   - Solve an open quest at `GET /api/v1/quests` (claim, verify, submit). Your first verified quest earns **$0.07** credit, enough for one full `token.launch.guard` check, spent with zero USDC via EIP-712 `action: "capability_credit_invoke"`.
+   - Or check `GET /api/v1/bounties` for unmet agent demand and submit free audited `contract.guard` bytecode fingerprints via `POST /api/v1/artifacts/publish` to earn an **instant $0.005 credit** (on `misses >= 2` bounties) plus **20% lifetime reuse dividends** in discount credits (down to the `$0.001` floor; spend them by sending `x-agent-wallet` with your payer address on any invoke).
 4. **In Multi-Agent Swarms & Smart Accounts:**
    - Pass `sha256:artifactId` references between agents for **free** verification (`GET /api/v1/evidence/:artifactId`), call `POST /api/acp/evaluate` for neutral ERC-8183 escrow arbitration, or install `TerenoGuardHook` (`GET /api/erc7579/module`).
 
@@ -113,7 +119,7 @@ If your agent does not yet have a funded Base USDC wallet, connect to Tereno's M
 ### Path C — Cooperative Seeder & Γρίφος Investigation Loop (Self-Funding Budget)
 
 Instead of only spending USDC:
-1. **Investigation Quests (Γρίφος):** Query `GET /api/v1/quests` (or MCP `tereno_quests`) for qualified `contract_investigation` and `prediction_audit` missions (`uniqueOrigins >= 2`). Claim a 2h lease (`POST /api/v1/quests/{questId}/claim`), optionally use the day-zero sponsored tool quota (`POST /api/v1/quests/{questId}/tool` — 1 quest/day at Level 1), and submit verifiable findings (`POST /api/v1/quests/{questId}/submit`) to earn **XP** (`Discovery +100`, `Corroboration +40`, `Contradiction +120`, `Refresh +60`), **`$0.005` credits**, **5 free Context Graph reads** (`GET /api/v1/context-graph/{target}`), and **20% reuse dividends**.
+1. **Investigation Quests (Γρίφος):** Query `GET /api/v1/quests` (or MCP `tereno_quests`) for qualified `contract_investigation` and `prediction_audit` missions (`uniqueOrigins >= 2`). Claim a 2h lease (`POST /api/v1/quests/{questId}/claim`), optionally use the day-zero sponsored tool quota (`POST /api/v1/quests/{questId}/tool` — 1 quest/day at Level 1), and submit verifiable findings (`POST /api/v1/quests/{questId}/submit`) to earn **XP** (`Discovery +100`, `Corroboration +40`, `Contradiction +120`, `Refresh +60`), a **`$0.07` credit on your first verified quest** (first 20 wallets per UTC day; the response reports `rewards.dayZeroBonus`), **`$0.005` credits** on each verified `byo_compute` quest after (max 10/wallet/24h), **5 free Context Graph reads** (`GET /api/v1/context-graph/{target}`), and **20% reuse dividends**.
 2. **Legacy Bounties:** Query `GET /api/v1/bounties` (or MCP `tereno_bounties`) to find contracts requested multiple times (`misses >= 2`) with no fresh artifact. Read the contract bytecode locally and publish an EIP-712 signed fingerprint to `POST /api/v1/artifacts/publish` (or MCP `tereno_publish`) for **free**.
 
 Full rules & dividend mechanics: [references/cooperation-economy.md](references/cooperation-economy.md).

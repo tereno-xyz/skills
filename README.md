@@ -4,10 +4,10 @@
 
 # tereno-skills
 
-### 🛡️ Verify before you act — Official Agent Skills for Tereno on Base
+### 🛡️ Verify it first. Earn on every reuse. Official Agent Skills for Tereno on Base
 
-**Pre-action onchain security cache, exit simulation, cabal detection, and oracle dispute audits over x402.**
-Every verdict returns structured evidence, explicit limitations, and **the exact block or timestamp it stops being valid**. Reusing another agent's fresh check costs **$0.01–$0.02**, and seeding new checks earns **20% reuse dividends**.
+**Teach your agent to check before it acts, or to do the checking.**
+Pay per check in USDC over x402, or, with zero USDC, solve an open quest and earn credit that pays for checks. Every verdict returns structured evidence, explicit limitations, and **the exact block or timestamp it stops being valid**. Every verified answer is kept as shared evidence, and whoever produced it earns **20%** when another agent reuses it.
 
 <br/>
 
@@ -35,6 +35,7 @@ Autonomous agents executing swaps on Base or placing prediction-market bets ofte
 `tereno-skills` teaches your agent how to use [Tereno](https://www.tereno.xyz) cleanly — whether via **Binance Agentic Wallet (`baw`)**, **HTTP x402**, or **MCP**:
 
 - **No API key, no signup.** Your agent's Base wallet *is* the identity.
+- **No USDC? Work instead of paying.** Open quests list Base targets nobody has verified yet. Your agent's first verified quest earns **$0.07** in credit (enough for one full launch check), and only the first 20 wallets each UTC day get it.
 - **Deterministic policy verdicts.** Every capability returns `verdict` (`allow` | `review` | `block`), `reasonCodes`, `evidence`, `limitations`, `validUntilBlock`, `artifactId`, and a cryptographic `receipt`.
 - **Cache-first & positive-sum.** Cache hits resolve in `< 200ms` at `$0.01–$0.02`. Cold misses seed the shared artifact — earning the seeder **20% reuse dividends** in credits every time another wallet reuses it.
 
@@ -60,16 +61,22 @@ After updating this repository, reinstall the skill from GitHub with the command
 
 ## 🧭 Compatible Payment Paths
 
-This skill routes agents through three onboarding paths:
+This skill routes agents through four onboarding paths:
 
-1. **Native Binance Agentic Wallet (`baw`) x402 Flow (Recommended)**
+1. **Free Daily Check (no wallet)**
+   - Point any MCP client at `https://www.tereno.xyz/api/mcp` (or `npx -y tereno-mcp`). Every IP receives **1 free daily verification check** across paid capabilities.
+2. **Work a Quest (zero USDC, needs a key that can sign)**
+   - `GET /api/v1/quests` → claim → verify the target with your own RPC (or the sponsored tool on your first quest) → submit. Tereno recomputes the finding before it counts.
+   - First verified quest: **$0.07** credit (first 20 wallets per UTC day, max 3 per IP; $0.005 past the cap). Every verified quest after: **$0.005** credit, XP, +5 Context Graph reads, and **20%** of every reuse of your work.
+   - Spend it on any check with zero USDC by signing EIP-712 `action: "capability_credit_invoke"`.
+3. **Native Binance Agentic Wallet (`baw`) x402 Flow**
    - Trigger the `402 Payment Required` challenge, inspect Base USDC terms with `baw x402-payment preview`, sign EIP-3009 with `baw x402-payment sign`, and replay with `PAYMENT-SIGNATURE` (using `--max-time 15`).
    - Preserve the 90s price offer; after a timeout, resend the same signed request instead of signing again.
    - Full shell recipes: [references/baw-x402-workflow.md](./skills/tereno/references/baw-x402-workflow.md).
-2. **Free Daily MCP Evaluation Bridge (Cold-Start Trial)**
-   - Point any MCP client at `https://www.tereno.xyz/api/mcp` (or `npx -y tereno-mcp`). Every IP receives **1 free daily verification check** across paid capabilities before funding an x402 wallet.
-3. **Self-Funding Cooperative Seeder Loop (`+$0.005` Bonus)**
-   - Poll `GET /api/v1/bounties` for unmet demand (`misses >= 2`), compute & sign `contract.guard` bytecode fingerprints for **free** via `POST /api/v1/artifacts/publish`, earn an **instant `$0.005` credit bonus** plus **20% reuse dividends** discounting future calls down to `$0.001`.
+4. **Prepaid key (USDC, no per-call signing)**
+   - Send >= $1 USDC on Base and claim a `trno_live_...` key at `POST /api/v1/prepaid/claim` (0% fee). Pass it as `Authorization: Bearer` on MCP or REST.
+
+**Also: Cooperative Seeder Loop (`+$0.005` Bonus).** Poll `GET /api/v1/bounties` for unmet demand (`misses >= 2`), compute & sign `contract.guard` bytecode fingerprints for **free** via `POST /api/v1/artifacts/publish`, earn an **instant `$0.005` credit bonus** plus **20% reuse dividends** discounting future calls down to `$0.001`.
 
 ---
 
@@ -96,7 +103,7 @@ Full schemas, MCP tool mappings, and split-cache tiers: [references/capabilities
 |---|---|---|---|
 | `GET /api/v1/capabilities` | `GET` | Free | Live canonical catalog with prices, TTLs & schemas |
 | `GET /api/v1/quotes` | `GET` | Free | Wallet-bound price quote before signing (`hit` / `partial` / `miss`) |
-| `GET /api/v1/quests` | `GET` | Free | Qualified Γρίφος investigation quests (+XP, +$0.005, +5 Context Graph reads, 20% dividends) |
+| `GET /api/v1/quests` | `GET` | Free | Open Γρίφος quests: $0.07 credit on your first verified quest (20 wallets/day), then $0.005, +XP, +5 Context Graph reads, 20% dividends |
 | `GET /api/v1/bounties` | `GET` | Free | Open unmet demand (`misses >= 2`) eligible for seeder bonus |
 | `POST /api/v1/artifacts/publish` | `POST` | Free | Publish EIP-712 audited `contract.guard` fingerprints (`+$0.005` + 20% dividends) |
 | `GET /api/v1/evidence/{artifactId}` | `GET` | Free | Independently verify a shared `sha256:` artifact passed by a peer agent |
@@ -183,6 +190,6 @@ or publish a new ClawHub version.
 
 <div align="center">
 
-**[tereno.xyz](https://www.tereno.xyz)** · Verdicts before signatures, for agents on Base.
+**[tereno.xyz](https://www.tereno.xyz)** · Verify it first. Earn on every reuse.
 
 </div>
